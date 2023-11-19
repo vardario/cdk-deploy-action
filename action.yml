@@ -34,6 +34,7 @@ runs:
         aws-region: eu-central-1
         output-credentials: true
     - name: upload stack assets
+      shell: bash
       run: npx cdk-assets --path ${{ inputs.cdk-output-path }}/${{ inputs.deploy-stack-name }}.assets.json --verbose publish
     - name: assuming deploy role
       uses: aws-actions/configure-aws-credentials@v4
