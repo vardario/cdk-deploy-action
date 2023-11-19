@@ -1,0 +1,53 @@
+name: "cdk-deploy-action"
+description: "This action takes a single stack instance which was created through cdk synth and deploys it to a given account."
+inputs:
+  cdk-qualifier:
+    description: "The cdk qualifier which was used during bootstrapping. Usually its the default value of 'hnb659fds'"
+    required: true
+    default: "hnb659fds"
+  deploy-account-id:
+    description: "The account id to deploy to"
+    required: true
+  deploy-region:
+    description: "The region to deploy to"
+    required: true
+    default: "us-east-1"
+  deploy-stack-name:
+    description: "The stack name to deploy"
+    required: true
+  deploy-role-arn:
+    description: "The role arn to assume during deployment"
+    required: true
+  cdk-output-path:
+    description: "The path containing the cdk output"
+    required: true
+    default: cdk.out
+runs:
+  using: "composite"
+  steps:
+    - name: assuming-deploy-role
+      id: assume_deploy_role
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ inputs.deploy-role-arn }}
+        role-session-name: cicd
+        aws-region: eu-central-1
+        output-credentials: true
+    - name: upload stack assets
+      run: npx cdk-assets --path ${{ inputs.cdk-output-path }}/${{ inputs.deploy-stack-name }}.assets.json --verbose publish
+    - name: assuming deploy role
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ steps.assume_deploy_role.outputs.aws-access-key-id }}
+        aws-secret-access-key: ${{ steps.assume_deploy_role.outputs.aws-secret-access-key }}
+        aws-session-token: ${{ steps.assume_deploy_role.outputs.aws-session-token }}
+        role-to-assume: arn:aws:iam::${{ inputs.deploy-account-id }}:role/cdk-${{ inputs.cdk-qualifier }}-deploy-role-${{ inputs.deploy-account-id }}-${{ inputs.deploy-region }}
+        role-session-name: deploy
+        aws-region: ${{ inputs.deploy-region }}
+        role-skip-session-tagging: true
+    - name: deploy stack
+      uses: aws-actions/aws-cloudformation-github-deploy@v1
+      with:
+        name: ${{ inputs.deploy-stack-name }}
+        template: ${{ inputs.cdk-output-path }}/${{ inputs.deploy-stack-name }}.template.json
+        role-arn: arn:aws:iam::${{ inputs.deploy-account-id }}:role/cdk-${{ inputs.cdk-qualifier }}-cfn-exec-role-${{ inputs.deploy-account-id }}-${{ inputs.deploy-region }}
