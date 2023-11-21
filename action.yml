@@ -25,25 +25,25 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: assuming-deploy-role
-      id: assume_deploy_role
+    - name: assuming-deploy-account-role
+      id: assume_deploy_account_role
       uses: aws-actions/configure-aws-credentials@v4
       with:
         role-to-assume: ${{ inputs.deploy-role-arn }}
-        role-session-name: cicd
-        aws-region: eu-central-1
+        role-session-name: deploy
+        aws-region: ${{ inputs.deploy-region }}
         output-credentials: true
     - name: upload stack assets
       shell: bash
-      run: npx cdk-assets --path ${{ inputs.cdk-output-path }}/${{ inputs.deploy-stack-name }}.assets.json --verbose publish
-    - name: assuming deploy role
+      run: npx cdk-assets@2 --path ${{ inputs.cdk-output-path }}/${{ inputs.deploy-stack-name }}.assets.json --verbose publish
+    - name: assuming cdk-deploy role
       uses: aws-actions/configure-aws-credentials@v4
       with:
-        aws-access-key-id: ${{ steps.assume_deploy_role.outputs.aws-access-key-id }}
-        aws-secret-access-key: ${{ steps.assume_deploy_role.outputs.aws-secret-access-key }}
-        aws-session-token: ${{ steps.assume_deploy_role.outputs.aws-session-token }}
+        aws-access-key-id: ${{ steps.assume_deploy_account_role.outputs.aws-access-key-id }}
+        aws-secret-access-key: ${{ steps.assume_deploy_account_role.outputs.aws-secret-access-key }}
+        aws-session-token: ${{ steps.assume_deploy_account_role.outputs.aws-session-token }}
         role-to-assume: arn:aws:iam::${{ inputs.deploy-account-id }}:role/cdk-${{ inputs.cdk-qualifier }}-deploy-role-${{ inputs.deploy-account-id }}-${{ inputs.deploy-region }}
-        role-session-name: deploy
+        role-session-name: cdk-deploy
         aws-region: ${{ inputs.deploy-region }}
         role-skip-session-tagging: true
     - name: deploy stack
