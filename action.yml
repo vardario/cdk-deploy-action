@@ -15,6 +15,9 @@ inputs:
   deploy-stack-name:
     description: "The stack name to deploy"
     required: true
+  deploy-stack-as-name:
+    description: "If this is defined the stack will be deployed with this name instead of the stack name"
+    required: false
   deploy-role-arn:
     description: "The role arn to assume during deployment"
     required: true
@@ -49,6 +52,6 @@ runs:
     - name: deploy stack
       uses: aws-actions/aws-cloudformation-github-deploy@v1
       with:
-        name: ${{ inputs.deploy-stack-name }}
+        name: ${{ inputs.deploy-stack-as-name || inputs.deploy-stack-name }}
         template: ${{ inputs.cdk-output-path }}/${{ inputs.deploy-stack-name }}.template.json
         role-arn: arn:aws:iam::${{ inputs.deploy-account-id }}:role/cdk-${{ inputs.cdk-qualifier }}-cfn-exec-role-${{ inputs.deploy-account-id }}-${{ inputs.deploy-region }}
