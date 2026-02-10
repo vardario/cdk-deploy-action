@@ -55,3 +55,4 @@ runs:
         name: ${{ inputs.deploy-stack-as-name || inputs.deploy-stack-name }}
         template: ${{ inputs.cdk-output-path }}/${{ inputs.deploy-stack-name }}.template.json
         role-arn: arn:aws:iam::${{ inputs.deploy-account-id }}:role/cdk-${{ inputs.cdk-qualifier }}-cfn-exec-role-${{ inputs.deploy-account-id }}-${{ inputs.deploy-region }}
+        capabilities: CAPABILITY_NAMED_IAM
