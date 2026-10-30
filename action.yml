@@ -49,10 +49,23 @@ runs:
         role-session-name: cdk-deploy
         aws-region: ${{ inputs.deploy-region }}
         role-skip-session-tagging: true
+    - name: resolve stack template
+      id: template
+      shell: bash
+      env:
+        CDK_OUTPUT_PATH: ${{ inputs.cdk-output-path }}
+        STACK_NAME: ${{ inputs.deploy-stack-name }}
+        ACCOUNT_ID: ${{ inputs.deploy-account-id }}
+        REGION: ${{ inputs.deploy-region }}
+      run: |
+        set -euo pipefail
+        template="$(bash "${GITHUB_ACTION_PATH}/scripts/resolve-template.sh")"
+        echo "Using template: ${template}"
+        echo "template=${template}" >> "$GITHUB_OUTPUT"
     - name: deploy stack
       uses: aws-actions/aws-cloudformation-github-deploy@v1
       with:
         name: ${{ inputs.deploy-stack-as-name || inputs.deploy-stack-name }}
-        template: ${{ inputs.cdk-output-path }}/${{ inputs.deploy-stack-name }}.template.json
+        template: ${{ steps.template.outputs.template }}
         role-arn: arn:aws:iam::${{ inputs.deploy-account-id }}:role/cdk-${{ inputs.cdk-qualifier }}-cfn-exec-role-${{ inputs.deploy-account-id }}-${{ inputs.deploy-region }}
         capabilities: CAPABILITY_NAMED_IAM
