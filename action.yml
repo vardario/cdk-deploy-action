@@ -25,6 +25,10 @@ inputs:
     description: "The path containing the cdk output"
     required: true
     default: cdk.out
+  no-fail-on-empty-changeset:
+    description: "If '1', a deployment without changes succeeds instead of failing, like `cdk deploy`. Set to '0' to fail on an empty change set."
+    required: false
+    default: "1"
 runs:
   using: "composite"
   steps:
@@ -69,3 +73,4 @@ runs:
         template: ${{ steps.template.outputs.template }}
         role-arn: arn:aws:iam::${{ inputs.deploy-account-id }}:role/cdk-${{ inputs.cdk-qualifier }}-cfn-exec-role-${{ inputs.deploy-account-id }}-${{ inputs.deploy-region }}
         capabilities: CAPABILITY_NAMED_IAM
+        no-fail-on-empty-changeset: ${{ inputs.no-fail-on-empty-changeset }}
